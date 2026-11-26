@@ -1,0 +1,19 @@
+{
+  "name": "awesome-vc-pitch-forms",
+  "version": "1.0.0",
+  "description": "Verified public directory of 589 institutional VC pitch & intake forms with stage, sector, check-size, and form-provider metadata.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ezragodev/awesome-vc-pitch-forms.git"
+  },
+  "homepage": "https://modevc.com/investors/",
+  "scripts": {
+    "validate": "node scripts/validate.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
