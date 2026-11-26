@@ -6,8 +6,8 @@
 An open, MIT-licensed, machine-readable directory of **589 live HTTP-200 verified public VC pitch & intake forms** curated by [Mode VC](https://modevc.com/investors/).
 
 - **Browse & filter interactively:** [https://modevc.com/investors/](https://modevc.com/investors/)
-- **Venture Common App (MCP):** [https://modevc.com/api/mcp](https://modevc.com/api/mcp) (`match_vc_intake_forms`, `get_investor_details`)
-- **Machine-readable JSON dataset:** [`data/vc_intake_index.json`](./data/vc_intake_index.json)
+- **Venture Common App (MCP):** [https://modevc.com/api/mcp](https://modevc.com/api/mcp) (`match_vc_intake_forms`, `get_investor_details`) — open-source bridge at [`ezragodev/modevc-radar-mcp`](https://github.com/ezragodev/modevc-radar-mcp)
+- **Machine-readable exports:** [`data/vc_intake_index.json`](./data/vc_intake_index.json) (JSON) · [`data/vc_intake_forms.csv`](./data/vc_intake_forms.csv) (CSV)
 
 > Every entry contains strictly public institutional facts (firm name, domain, website, public intake form URL, form provider, investment stages, focus sectors, check-size bands, headquarters, and HTTP-200 check date). Zero personal emails or private contact records are included.
 
@@ -703,7 +703,7 @@ Each of the **589** verified pitch forms appears once below under its earliest l
 
 ## Machine-Readable Dataset & Venture Common App (MCP)
 
-Use [`data/vc_intake_index.json`](./data/vc_intake_index.json) directly in scripts, or connect your AI agent to Mode VC's hosted **Venture Common App** MCP endpoint at `https://modevc.com/api/mcp` to match startup stage, sector, and check size against verified pitch forms via `match_vc_intake_forms`.
+Use [`data/vc_intake_index.json`](./data/vc_intake_index.json) or [`data/vc_intake_forms.csv`](./data/vc_intake_forms.csv) directly in scripts and spreadsheets, or connect your AI agent to Mode VC's hosted **Venture Common App** MCP endpoint at `https://modevc.com/api/mcp` (or via the MIT-licensed [`ezragodev/modevc-radar-mcp`](https://github.com/ezragodev/modevc-radar-mcp) CLI/MCP server) to match startup stage, sector, and check size against verified pitch forms via `match_vc_intake_forms`.
 
 ```json
 {

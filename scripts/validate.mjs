@@ -17,7 +17,35 @@ function isValidHttpUrl(value) {
   }
 }
 
-export function validateDataset(dataset, readmeText = "") {
+function parseCsvRow(line) {
+  const cells = [];
+  let cur = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"' && line[i + 1] === '"') {
+        cur += '"';
+        i++;
+      } else if (ch === '"') {
+        inQuotes = false;
+      } else {
+        cur += ch;
+      }
+    } else if (ch === '"') {
+      inQuotes = true;
+    } else if (ch === ",") {
+      cells.push(cur);
+      cur = "";
+    } else {
+      cur += ch;
+    }
+  }
+  cells.push(cur);
+  return cells;
+}
+
+export function validateDataset(dataset, readmeText = "", csvText = "") {
   const errors = [];
 
   if (!dataset || typeof dataset !== "object") {
@@ -114,21 +142,64 @@ export function validateDataset(dataset, readmeText = "") {
     }
   }
 
+  if (csvText) {
+    if (EMAIL_RE.test(csvText)) {
+      errors.push("vc_intake_forms.csv contains an email address pattern.");
+    }
+    if (FORBIDDEN_RE.test(csvText)) {
+      errors.push("vc_intake_forms.csv contains a forbidden keyword.");
+    }
+    if (HIDDEN_CHAR_RE.test(csvText)) {
+      errors.push("vc_intake_forms.csv contains a hidden Unicode tracking character.");
+    }
+    const csvLines = csvText.trimEnd().split(/\r?\n/);
+    if (csvLines.length < 2) {
+      errors.push("vc_intake_forms.csv must contain a header and data rows.");
+    } else {
+      const header = parseCsvRow(csvLines[0]);
+      const dataRows = csvLines.slice(1);
+      if (dataRows.length !== dataset.forms.length) {
+        errors.push(`vc_intake_forms.csv row count (${dataRows.length}) does not match JSON forms count (${dataset.forms.length}).`);
+      }
+      const csvSlugs = new Set();
+      for (let i = 0; i < dataRows.length; i++) {
+        const cols = parseCsvRow(dataRows[i]);
+        if (cols.length !== header.length) {
+          errors.push(`vc_intake_forms.csv row ${i + 1}: expected ${header.length} columns, got ${cols.length}`);
+          continue;
+        }
+        csvSlugs.add(cols[0]);
+        if (!isValidHttpUrl(cols[3]) || !isValidHttpUrl(cols[4])) {
+          errors.push(`vc_intake_forms.csv row ${i + 1} (${cols[0]}): invalid URL`);
+        }
+        if (cols[14] !== "200") {
+          errors.push(`vc_intake_forms.csv row ${i + 1} (${cols[0]}): verified_http_status must be 200`);
+        }
+      }
+      if (csvSlugs.size !== seenSlugs.size) {
+        errors.push(`vc_intake_forms.csv unique slug count (${csvSlugs.size}) does not match JSON (${seenSlugs.size}).`);
+      }
+    }
+  }
+
   return errors;
 }
 
 if (process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url))) {
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
   const dataPath = path.join(root, "data", "vc_intake_index.json");
+  const csvPath = path.join(root, "data", "vc_intake_forms.csv");
   const readmePath = path.join(root, "README.md");
   const dataset = JSON.parse(fs.readFileSync(dataPath, "utf8"));
+  const csvText = fs.existsSync(csvPath) ? fs.readFileSync(csvPath, "utf8") : "";
   const readme = fs.existsSync(readmePath) ? fs.readFileSync(readmePath, "utf8") : "";
-  const errors = validateDataset(dataset, readme);
+  const errors = validateDataset(dataset, readme, csvText);
   if (errors.length > 0) {
     console.error("Validation failed:\n" + errors.slice(0, 20).join("\n"));
     process.exit(1);
   }
+  const csvCount = csvText ? csvText.trimEnd().split(/\r?\n/).length - 1 : 0;
   console.log(
-    `OK: ${dataset.total_forms} verified HTTP-200 VC pitch forms (${dataset.unique_firms} unique firms, as_of ${dataset.as_of}), 0 emails, 0 forbidden words, 0 duplicate slugs.`
+    `OK: ${dataset.total_forms} JSON forms and ${csvCount} CSV rows (${dataset.unique_firms} unique firms, as_of ${dataset.as_of}), 0 emails, 0 forbidden words, 0 duplicate slugs.`
   );
 }
